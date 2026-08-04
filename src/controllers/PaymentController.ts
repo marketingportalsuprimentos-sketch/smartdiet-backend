@@ -69,11 +69,21 @@ export class PaymentController {
   // Recebe o retorno instantâneo do Asaas quando o Pix é pago
   async webhook(req: Request, res: Response) {
     try {
+      // 1. Validação obrigatória do Token de Segurança
+      const asaasToken = req.headers['asaas-access-token'];
+      const envToken = process.env.ASAAS_WEBHOOK_TOKEN;
+
+      if (envToken && asaasToken !== envToken) {
+        console.error('❌ Bloqueado: Token do Webhook inválido ou ausente.');
+        return res.status(403).json({ error: 'Acesso negado.' });
+      }
+
       const { event, payment } = req.body;
 
+      // 2. Processamento do evento de pagamento aprovado
       if (event === 'PAYMENT_RECEIVED' || event === 'PAYMENT_CONFIRMED') {
         const sub = await prisma.subscription.findUnique({
-          where: { asaasPaymentId: payment.id }
+          where: { asaasPaymentId: payment?.id }
         });
 
         if (sub) {
@@ -89,10 +99,12 @@ export class PaymentController {
         }
       }
 
-      return res.json({ received: true });
+      // 3. Retorno explícito de HTTP 200 para o Asaas liberar a fila
+      return res.status(200).send();
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Erro no Webhook' });
+      console.error('❌ Erro no processamento do Webhook:', error);
+      // Mantemos o 500 no catch para que, se o banco cair, o Asaas saiba e tente novamente depois
+      return res.status(500).json({ error: 'Erro interno no processamento do Webhook' });
     }
   }
 }
