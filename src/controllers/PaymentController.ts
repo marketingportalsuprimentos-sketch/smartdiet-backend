@@ -58,7 +58,7 @@ export class PaymentController {
       return res.json({
         paymentId: payment.id,
         invoiceUrl: payment.invoiceUrl,
-        pixPayload: payment.pixCopiaECola
+        pixPayload: payment.pixCopiaECola 
       });
     } catch (error: any) {
       console.error(error);
@@ -69,13 +69,9 @@ export class PaymentController {
   // Recebe o retorno instantâneo do Asaas quando o Pix é pago
   async webhook(req: Request, res: Response) {
     try {
-      // DEBUG: Vamos capturar e imprimir tudo o que o Asaas está enviando no cabeçalho
-      console.log('\n=== 🚨 HEADERS RECEBIDOS DO ASAAS ===');
-      console.log(JSON.stringify(req.headers, null, 2));
-      console.log('=====================================\n');
-
-      /*
-      // ⚠️ TRAVA DE SEGURANÇA TEMPORARIAMENTE DESATIVADA PARA DIAGNÓSTICO
+      console.log('\n=== 🚨 EVENTO RECEBIDO NA ROTA WEBHOOK ===');
+      
+      // 1. Validação obrigatória do Token de Segurança Restaurada
       const asaasToken = req.headers['asaas-access-token'];
       const envToken = process.env.ASAAS_WEBHOOK_TOKEN;
 
@@ -83,10 +79,10 @@ export class PaymentController {
         console.error('❌ Bloqueado: Token do Webhook inválido ou ausente.');
         return res.status(403).json({ error: 'Acesso negado.' });
       }
-      */
 
       const { event, payment } = req.body;
 
+      // 2. Processamento do evento de pagamento aprovado
       if (event === 'PAYMENT_RECEIVED' || event === 'PAYMENT_CONFIRMED') {
         const sub = await prisma.subscription.findUnique({
           where: { asaasPaymentId: payment?.id }
@@ -105,6 +101,7 @@ export class PaymentController {
         }
       }
 
+      // 3. Retorno explícito de HTTP 200 para o Asaas
       return res.status(200).send();
     } catch (error) {
       console.error('❌ Erro no processamento do Webhook:', error);
