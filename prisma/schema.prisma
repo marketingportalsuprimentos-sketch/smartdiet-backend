@@ -1,0 +1,90 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id                String   @id @default(uuid())
+  name              String
+  email             String   @unique
+  password          String
+  birthDate         DateTime
+  gender            String  
+  heightCm          Float
+  currentWeightKg   Float
+  goalWeightKg      Float
+  goalPace          String   @default("NORMAL")
+  activityLevel     String   @default("SEDENTARY") 
+  
+  trialStartDate    DateTime @default(now())
+  isPremium         Boolean  @default(false)
+  asaasCustomerId   String?
+
+  resetToken        String?
+  resetTokenExpires DateTime?
+  
+  meals             Meal[]
+  weightHistory     WeightHistory[] 
+  waterLogs         WaterLog[]
+  subscriptions     Subscription[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Subscription {
+  id              String   @id @default(uuid())
+  patientId       String
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  asaasPaymentId  String   @unique 
+  plan            String   
+  status          String   
+  dueDate         DateTime
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model WeightHistory {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  weightKg  Float
+  loggedAt  DateTime @default(now())
+}
+
+model Meal {
+  id           String   @id @default(uuid())
+  patientId    String
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  type         String   
+  photoUrl     String?
+  
+  calories     Float
+  proteinG     Float
+  carbsG       Float
+  fatG         Float
+  
+  foodDetails  String   
+  coachMessage String? 
+  
+  loggedAt     DateTime @default(now())
+}
+
+model WaterLog {
+  id        String   @id @default(uuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  amountMl  Int
+  loggedAt  DateTime @default(now())
+}
