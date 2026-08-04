@@ -12,6 +12,20 @@ export const prisma = new PrismaClient();
 const app = express();
 
 app.use(cors());
+
+// INJEÇÃO DE RASTREAMENTO (DEBUG)
+// Isso vai capturar o "toque" do Asaas no servidor antes de qualquer erro
+app.use((req, res, next) => {
+  if (req.url.includes('webhook')) {
+    console.log(`\n=== 🚨 ALERTA: TENTATIVA DE ACESSO DO ASAAS ===`);
+    console.log(`MÉTODO: ${req.method}`);
+    console.log(`ROTA: ${req.url}`);
+    console.log(`HEADERS:`, JSON.stringify(req.headers));
+    console.log(`===============================================\n`);
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(routes);
 
