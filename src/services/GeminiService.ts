@@ -4,10 +4,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export class GeminiService {
   async analyzeMealImage(mimeType: string, imageBase64: string) {
-    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyDKe3zqtHGH9ZB-h3upD8z9JRkfe8DgPLM";
+    // A chave agora deve vir EXCLUSIVAMENTE do ambiente (.env local ou Render).
+    // NUNCA coloque strings de chaves de API direto no código-fonte.
+    const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY não encontrada.");
+      throw new Error("GEMINI_API_KEY não encontrada nas variáveis de ambiente.");
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
